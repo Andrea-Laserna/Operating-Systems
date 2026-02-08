@@ -12,26 +12,25 @@ understanding of the concepts tackled in class and learned with youtube tutorial
 int main(void){
 
 	size_t bufsize = 0;
-	char *command = NULL; 							// let getline allocate buffer since we don't know how but the input is anyway
+	char *command = NULL, *cmd_copy = NULL, *token = NULL; 							// let getline allocate command since we don't know how long/big the input is anyway
 	char *delimiter = " \n";
-	char *token; 
+	int argc = 0;										
+	char **argv = NULL;
 
 
 	printf("parshell> ");
 	if (getline(&command, &bufsize, stdin) == -1) {
-		perror("getline"); 							// to know where the error is coming from
-		free(command);								// Free the allocated memory to prevent memory leak
+		perror("getline"); 												// to know where the error is coming from
+		free(command);													// Free the allocated memory to prevent memory leak
 		return EXIT_FAILURE; 
 	}
 
-	token = strtok(command, delimiter);				// returns a pointer to a null-terminated string containing the next token.
+	token = strtok(command, delimiter);									// returns a pointer to a null-terminated string containing the next token.
 	while (token != NULL) {
         printf("%s\n", token);
         token = strtok(NULL, delimiter);
     }
 
-
-	printf("You entered: %s", command);
 	free(command);
 
 
@@ -47,5 +46,8 @@ Design Decisions:
 	- It handles the newline character at the end of the input, which can be useful for processing commands.
 	* why use EXIT_SUCCESS and EXIT_FAILURE?
 		- for future automated testing, it is easier to check for these standard exit codes rather than arbitrary integers.
-
+2. why use strtok?
+	- It is a simple and efficient way to split a string into tokens based on specified delimiters.
+	- However, it modifies the original string by inserting null characters to terminate tokens
+	- Try to implement a version that does not modify the original string maybe? 
 */
