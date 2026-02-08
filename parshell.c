@@ -8,6 +8,9 @@ understanding of the concepts tackled in class and learned with youtube tutorial
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 int main(void){
 
@@ -16,6 +19,7 @@ int main(void){
 	char *delimiter = " \n";
 	int argc = 0, i = 0; 										
 	char **argv = NULL;
+	pid_t pid;															
 
 	//read command
 	printf("parshell> ");
@@ -36,7 +40,7 @@ int main(void){
 	free(cmd_copy);
 
 	//allocate memory for argv using argc and fill with tokens from command
-	argv = malloc(sizeof(char *) * (argc + 1));   						// + 1 for the NULL terminator   				
+	argv = malloc(sizeof(char *) * (argc + 1));   						// + 1 for the NULL terminator for the exec				
     token = strtok(command, delimiter);
     while (token != NULL) {
         argv[i] = token;        
@@ -45,11 +49,23 @@ int main(void){
     }
     argv[i] = NULL;                            
 
-	i = 0;
-    while (argv[i] != NULL) {
-		printf("argv[%d]: %s\n", i, argv[i]);
-		i++;
+	//fork and exec
+	pid = fork();
+	if (pid == -1) {
+        perror("Fork failed");
+        return EXIT_FAILURE;
     }
+
+	if (pid == 0) {
+        int val = execvp(argv[0], argv); 
+        if (val == -1) perror("execvp failed");
+        printf("This line will not be printed if execvp is successful.\n");
+    } else {
+        wait(NULL);
+        printf("Done with execvp \n");
+    }
+
+
 	
 	free(command);														// reminder to not free command until after done using the tokens
 	free(argv);															
