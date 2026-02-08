@@ -14,10 +14,10 @@ int main(void){
 	size_t bufsize = 0;
 	char *command = NULL, *cmd_copy = NULL, *token = NULL; 							// let getline allocate command since we don't know how long/big the input is anyway
 	char *delimiter = " \n";
-	int argc = 0;										
+	int argc = 0, i = 0; 										
 	char **argv = NULL;
 
-
+	//read command
 	printf("parshell> ");
 	if (getline(&command, &bufsize, stdin) == -1) {
 		perror("getline"); 												// to know where the error is coming from
@@ -25,15 +25,34 @@ int main(void){
 		return EXIT_FAILURE; 
 	}
 
-	token = strtok(command, delimiter);									// returns a pointer to a null-terminated string containing the next token.
-	while (token != NULL) {
-        printf("%s\n", token);
+	//make a copy of command to cound argc
+	cmd_copy = strdup(command);											// since the strtok modifies the original string, we need to make a copy of it to use for tokenization. strdup allocates memory for the copy, so we need to free it later.
+	token = strtok(cmd_copy, delimiter);								// returns a pointer to a null-terminated string containing the next token.	
+	while (token != NULL) {												
+        argc++;
         token = strtok(NULL, delimiter);
     }
+	printf("argc: %d\n", argc);
+	free(cmd_copy);
 
-	free(command);
+	//allocate memory for argv using argc and fill with tokens from command
+	argv = malloc(sizeof(char *) * (argc + 1));   						// + 1 for the NULL terminator   				
+    token = strtok(command, delimiter);
+    while (token != NULL) {
+        argv[i] = token;        
+        token = strtok(NULL, delimiter);           
+        i++;
+    }
+    argv[i] = NULL;                            
 
-
+	i = 0;
+    while (argv[i] != NULL) {
+		printf("argv[%d]: %s\n", i, argv[i]);
+		i++;
+    }
+	
+	free(command);														// reminder to not free command until after done using the tokens
+	free(argv);															
 	return EXIT_SUCCESS; 
 }
 
@@ -50,4 +69,17 @@ Design Decisions:
 	- It is a simple and efficient way to split a string into tokens based on specified delimiters.
 	- However, it modifies the original string by inserting null characters to terminate tokens
 	- Try to implement a version that does not modify the original string maybe? 
+
+3. why use strdup?
+	- It is a convenient way to create a copy of a string, which is necessary because strtok modifies the original string.
+	- It allocates memory for the new string and copies the contents, so we need to remember to free it later to avoid memory leaks.
+	- However, this current approach seems inefficient since we are making a copy of the command just to tokenize it, 
+		and then we are tokenizing it again to fill the argv array. 
+		|
+		argv = realloc(argv, argc * sizeof(char *)); // Resize argv to hold the new token
+        argv[argc - 1] = strdup(token); // Store a copy of the token in argv
+		|
+		this is one way to avoid the copy but it leads to multiple allocations so we need to free each token in argv, kapoy na ya.
+		think of a better way to implement this. 
+		try strtok_r 
 */
