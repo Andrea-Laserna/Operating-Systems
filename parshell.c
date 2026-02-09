@@ -64,7 +64,7 @@ int main(void){
 		if (pid == 0) {
 			int val = execvp(argv[0], argv); 
 			if (val == -1) perror("execvp failed");
-			printf("This line will not be printed if execvp is successful.\n");`
+			printf("This line will not be printed if execvp is successful.\n");
 		} else {
 			wait(NULL);
 			//printf("Done with execvp \n");
