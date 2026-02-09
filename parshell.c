@@ -17,58 +17,64 @@ int main(void){
 	size_t bufsize = 0;
 	char *command = NULL, *cmd_copy = NULL, *token = NULL; 							// let getline allocate command since we don't know how long/big the input is anyway
 	char *delimiter = " \n";
-	int argc = 0, i = 0; 										
+	int argc, i; 										
 	char **argv = NULL;
 	pid_t pid;															
 
-	//read command
-	printf("parshell> ");
-	if (getline(&command, &bufsize, stdin) == -1) {
-		perror("getline"); 												// to know where the error is coming from
-		free(command);													// Free the allocated memory to prevent memory leak
-		return EXIT_FAILURE; 
-	}
+	//loop to read and execute commands until user exits
+	while (1) {
+		argc = 0;
+		i = 0;
 
-	//make a copy of command to cound argc
-	cmd_copy = strdup(command);											// since the strtok modifies the original string, we need to make a copy of it to use for tokenization. strdup allocates memory for the copy, so we need to free it later.
-	token = strtok(cmd_copy, delimiter);								// returns a pointer to a null-terminated string containing the next token.	
-	while (token != NULL) {												
-        argc++;
-        token = strtok(NULL, delimiter);
-    }
-	printf("argc: %d\n", argc);
-	free(cmd_copy);
-
-	//allocate memory for argv using argc and fill with tokens from command
-	argv = malloc(sizeof(char *) * (argc + 1));   						// + 1 for the NULL terminator for the exec				
-    token = strtok(command, delimiter);
-    while (token != NULL) {
-        argv[i] = token;        
-        token = strtok(NULL, delimiter);           
-        i++;
-    }
-    argv[i] = NULL;                            
-
-	//fork and exec
-	pid = fork();
-	if (pid == -1) {
-        perror("Fork failed");
-        return EXIT_FAILURE;
-    }
-
-	if (pid == 0) {
-        int val = execvp(argv[0], argv); 
-        if (val == -1) perror("execvp failed");
-        printf("This line will not be printed if execvp is successful.\n");
-    } else {
-        wait(NULL);
-        printf("Done with execvp \n");
-    }
-
-
+		//read command
+		printf("parshell> ");
+		if (getline(&command, &bufsize, stdin) == -1) {
+			perror("getline"); 												// to know where the error is coming from
+			free(command);													// Free the allocated memory to prevent memory leak
+			return EXIT_FAILURE; 
+		}
 	
-	free(command);														// reminder to not free command until after done using the tokens
-	free(argv);															
+		//make a copy of command to cound argc
+		cmd_copy = strdup(command);											// since the strtok modifies the original string, we need to make a copy of it to use for tokenization. strdup allocates memory for the copy, so we need to free it later.
+		token = strtok(cmd_copy, delimiter);								// returns a pointer to a null-terminated string containing the next token.	
+		while (token != NULL) {												
+			argc++;
+			token = strtok(NULL, delimiter);
+		}
+		//printf("argc: %d\n", argc);
+		free(cmd_copy);
+	
+		//allocate memory for argv using argc and fill with tokens from command
+		argv = malloc(sizeof(char *) * (argc + 1));   						// + 1 for the NULL terminator for the exec				
+		token = strtok(command, delimiter);
+		while (token != NULL) {
+			argv[i] = token;        
+			token = strtok(NULL, delimiter);           
+			i++;
+		}
+		argv[i] = NULL;                            
+	
+		//fork and exec
+		pid = fork();
+		if (pid == -1) {
+			perror("Fork failed");
+			return EXIT_FAILURE;
+		}
+	
+		if (pid == 0) {
+			int val = execvp(argv[0], argv); 
+			if (val == -1) perror("execvp failed");
+			printf("This line will not be printed if execvp is successful.\n");`
+		} else {
+			wait(NULL);
+			//printf("Done with execvp \n");
+		}
+			
+	}
+		
+		free(command);														// reminder to not free command until after done using the tokens
+		free(argv);															
+
 	return EXIT_SUCCESS; 
 }
 
@@ -98,4 +104,24 @@ Design Decisions:
 		this is one way to avoid the copy but it leads to multiple allocations so we need to free each token in argv, kapoy na ya.
 		think of a better way to implement this. 
 		try strtok_r 
+4. Loop implementaion
+	- currently utilizes infinite loop. It initializes argc and i at the start and frees allocated memory (command,cmd_copy, argv) after execution. 
+	- program terminate with ctrl + z or something, 
+	- to implement exit command
+
+
+Progress:
+1. REPL
+2. Currently executes simple external commands (ls, ls -l)
+3. 
+
+
+To Dos:
+1. Modularize
+2. Make a more robust implementation of parsing. 
+3. Review Memory manangement for further improvement if any.
+4. Implement built in commands. 
+5. Use the Command Struct.
+6. Implement I/O Redirection. 
+7. File System Implementation.
 */
