@@ -14,8 +14,20 @@ understanding of the concepts tackled in class and learned with youtube tutorial
 
 int main(void){
 
-	size_t bufsize = 0;
-	char *command = NULL, *cmd_copy = NULL, *token = NULL; 							// let getline allocate command since we don't know how long/big the input is anyway
+	size_t bufsize = 0; 
+	/*
+		let getline allocate buffer, command, etc. since we don't know how long/big the input is anyway
+
+		command = buffer holding raw line read from stdin
+		cmd_copy = duplicate of command used for token counting, since strtok modifies strings
+		token = current token returned by strtok while parsing
+		delimiter = token separators
+		argc = no of tokens (arguments) found
+		i = index to fill argv
+		argv = array of char* pointers holding arguments for execvp; null-terminated
+		pid = processid returned by fork to differentiate parent from child
+	*/ 
+	char *command = NULL, *cmd_copy = NULL, *token = NULL; 							
 	char *delimiter = " \n";
 	int argc, i; 										
 	char **argv = NULL;
@@ -28,18 +40,18 @@ int main(void){
 
 		//read command
 		printf("parshell> ");
-		if (getline(&command, &bufsize, stdin) == -1) {
-			perror("getline"); 												// to know where the error is coming from
+		if (getline(&command, &bufsize, stdin) == -1) {						// check if line from stdin failed or hit EOF
+			perror("Error: check getline"); 								// to know where the error is coming from
 			free(command);													// Free the allocated memory to prevent memory leak
 			return EXIT_FAILURE; 
 		}
 	
-		//make a copy of command to cound argc
+		//make a copy of command to count argc
 		cmd_copy = strdup(command);											// since the strtok modifies the original string, we need to make a copy of it to use for tokenization. strdup allocates memory for the copy, so we need to free it later.
 		token = strtok(cmd_copy, delimiter);								// returns a pointer to a null-terminated string containing the next token.	
 		while (token != NULL) {												
 			argc++;
-			token = strtok(NULL, delimiter);
+			token = strtok(NULL, delimiter);								// tokenize remaining commands,then null
 		}
 		//printf("argc: %d\n", argc);
 		free(cmd_copy);
@@ -57,7 +69,7 @@ int main(void){
 		//fork and exec
 		pid = fork();
 		if (pid == -1) {
-			perror("Fork failed");
+			perror("Error: Fork failed");
 			return EXIT_FAILURE;
 		}
 	
