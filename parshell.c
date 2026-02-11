@@ -13,20 +13,7 @@ understanding of the concepts tackled in class and learned with youtube tutorial
 #include <sys/wait.h>
 
 int main(void){
-
 	size_t bufsize = 0; 
-	/*
-		let getline allocate buffer, command, etc. since we don't know how long/big the input is anyway
-
-		command = buffer holding raw line read from stdin
-		cmd_copy = duplicate of command used for token counting, since strtok modifies strings
-		token = current token returned by strtok while parsing
-		delimiter = token separators
-		argc = no of tokens (arguments) found
-		i = index to fill argv
-		argv = array of char* pointers holding arguments for execvp; null-terminated
-		pid = processid returned by fork to differentiate parent from child
-	*/ 
 	char *command = NULL, *cmd_copy = NULL, *token = NULL; 							
 	char *delimiter = " \n";
 	int argc, i; 										
@@ -65,75 +52,74 @@ int main(void){
 			i++;
 		}
 		argv[i] = NULL;                            
-	
-		//fork and exec
+
+		// handle empty input
+		if (argc == 0 || argv[0] == NULL) {
+			free(argv);
+			continue;
+		}
+
+		// built-in: exit (no forking)
+		if (strcmp(argv[0], "exit") == 0) {
+			// reap any finished children to avoid zombies
+			while (waitpid(-1, NULL, WNOHANG) > 0) {}		// target any child, ignore exit status, wnohang flag: waitpid returns immediately
+			free(argv);
+			break;
+		}
+
+		// built-in: cd (no forking)
+		if (strcmp(argv[0], "cd") == 0) {
+			const char *target = NULL;						// path: no string yet
+			// command + directory
+			if (argc >= 2 && argv[1] != NULL) {				
+				target = argv[1];							// point target to directory
+			// no directory -> return Home or /
+			} else {
+				target = getenv("HOME");
+				if (target == NULL) target = "/";
+			}
+			if (chdir(target) == -1) {
+				perror("Error: cd");
+			}
+			free(argv);
+			continue;
+		}
+
+		// built-in: pwd (no forking)
+		if (strcmp(argv[0], "pwd") == 0) {
+			char *cwd = getcwd(NULL, 0);
+			if (cwd == NULL) {
+				perror("Error: pwd");
+			} else {
+				printf("%s\n", cwd);
+				free(cwd);
+			}
+			free(argv);
+			continue;
+		}
+
+		//fork and exec for external commands
 		pid = fork();
 		if (pid == -1) {
 			perror("Error: Fork failed");
+			free(argv);
 			return EXIT_FAILURE;
 		}
-	
+
 		if (pid == 0) {
 			int val = execvp(argv[0], argv); 
 			if (val == -1) perror("execvp failed");
-			printf("This line will not be printed if execvp is successful.\n");
+			exit(EXIT_FAILURE);
 		} else {
 			wait(NULL);
+			free(argv);
 			//printf("Done with execvp \n");
 		}
 			
 	}
 		
 		free(command);														// reminder to not free command until after done using the tokens
-		free(argv);															
 
 	return EXIT_SUCCESS; 
 }
 
-
-/*
-Design Decisions: 
-1. why use getline?
-	- It is a convenient way to read an entire line of input, regardless of its length.
-	- It automatically allocates a buffer and resizes it as needed, which simplifies memory management.
-	- It handles the newline character at the end of the input, which can be useful for processing commands.
-	* why use EXIT_SUCCESS and EXIT_FAILURE?
-		- for future automated testing, it is easier to check for these standard exit codes rather than arbitrary integers.
-2. why use strtok?
-	- It is a simple and efficient way to split a string into tokens based on specified delimiters.
-	- However, it modifies the original string by inserting null characters to terminate tokens
-	- Try to implement a version that does not modify the original string maybe? 
-
-3. why use strdup?
-	- It is a convenient way to create a copy of a string, which is necessary because strtok modifies the original string.
-	- It allocates memory for the new string and copies the contents, so we need to remember to free it later to avoid memory leaks.
-	- However, this current approach seems inefficient since we are making a copy of the command just to tokenize it, 
-		and then we are tokenizing it again to fill the argv array. 
-		|
-		argv = realloc(argv, argc * sizeof(char *)); // Resize argv to hold the new token
-        argv[argc - 1] = strdup(token); // Store a copy of the token in argv
-		|
-		this is one way to avoid the copy but it leads to multiple allocations so we need to free each token in argv, kapoy na ya.
-		think of a better way to implement this. 
-		try strtok_r 
-4. Loop implementaion
-	- currently utilizes infinite loop. It initializes argc and i at the start and frees allocated memory (command,cmd_copy, argv) after execution. 
-	- program terminate with ctrl + z or something, 
-	- to implement exit command
-
-
-Progress:
-1. REPL
-2. Currently executes simple external commands (ls, ls -l)
-3. 
-
-
-To Dos:
-1. Modularize
-2. Make a more robust implementation of parsing. 
-3. Review Memory manangement for further improvement if any.
-4. Implement built in commands. 
-5. Use the Command Struct.
-6. Implement I/O Redirection. 
-7. File System Implementation.
-*/
