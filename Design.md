@@ -95,3 +95,25 @@ Progress:
 4. Use the Command Struct.
 5. Implement I/O Redirection. 
 6. File System Implementation.
+
+
+
+Notes:
+main.c  /*
+- Placing Command cmd; inside the loop keeps the scope and lifetime of the struct limited to each command entered, which is good practice for clarity and memory safety
+- Declaring the Command struct inside the loop allocates it on the STACK for each iteration.
+- Memory is automatically reclaimed at the end of each loop iteration. Only one Command struct exists at a time, and its memory is reused on each loop.
+
+- If fflush(stdout); did not exist, the prompt (mysh> ) might not appear immediately on the terminal. Output could be delayed until the buffer is full or a newline is printed, 
+    making the shell feel unresponsive or confusing for the user. This is especially noticeable in interactive programs where timely prompts are important.
+*/
+
+parser.c/*
+- Static Internal State: strtok uses a static variable inside the function to remember where it left off parsing the string
+- Because this variable is shared globally by the function, if you try to parse two different strings at the same time (e.g., in nested loops or multiple threads), the function gets confused and mixes up the pointers.
+- sage: You pass NULL in subsequent calls to tell it "continue using the static pointer you saved last time.
+
+
+- the _r stands for reentrant. Instead of using a hidden static variable, strtok_r requires you to provide a pointer (saveptr) to store the current position.
+- This allows you to parse multiple strings simultaneously without them interfering with each other because each parsing operation has its own separate "bookmark" variable.
+*/

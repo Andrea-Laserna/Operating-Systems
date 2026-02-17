@@ -125,6 +125,7 @@ int parse_command(const char *line, Command *cmd) {
     return 0;
 }
 
+// Free any heap allocations inside Command.
 void free_command(Command *cmd) {
     if (cmd == NULL) return;
     free(cmd->command);
@@ -137,3 +138,8 @@ void free_command(Command *cmd) {
     cmd->input_file = NULL;
     cmd->output_file = NULL;
 }
+
+
+/*
+help: ampangit ng code neto paulit2 pero ewan ko ba gumagana naman
+*/
