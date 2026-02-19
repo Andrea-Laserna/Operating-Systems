@@ -16,11 +16,11 @@ static int setup_redirection(const Command *cmd) {
     if (cmd->input_file != NULL) {
         int fd = open(cmd->input_file, O_RDONLY);
         if (fd == -1) {
-            perror("open input");
+            perror("mysh: input file");
             return -1;
         }
         if (dup2(fd, STDIN_FILENO) == -1) {
-            perror("dup2 input");
+            perror("mysh: dup2 input");
             close(fd);
             return -1;
         }
@@ -49,13 +49,14 @@ static int setup_redirection(const Command *cmd) {
 ExecStatus execute_command(const Command *cmd) {
     if (cmd == NULL || cmd->command == NULL) return EXEC_OK;
 
+    // Builtins are handled without forking
     if (is_builtin(cmd)) {
         return run_builtin(cmd);
     }
 
     pid_t pid = fork();
     if (pid < 0) {
-        perror("fork");
+        perror("mysh: fork");
         return EXEC_ERROR;
     }
 
@@ -63,20 +64,37 @@ ExecStatus execute_command(const Command *cmd) {
         if (setup_redirection(cmd) != 0) {
             _exit(EXIT_FAILURE);
         }
+      
         execvp(cmd->command, cmd->args);
-        perror("execvp");
-        _exit(EXIT_FAILURE);
+      
+        // execvp only returns on failure
+        if (errno == ENOENT) {
+            fprintf(stderr, "mysh: command not found: %s\n", cmd->command);
+        } else {
+            perror("mysh: exec");
+        }
+        _exit(127);
     }
 
     if (cmd->background) {
-        printf("[bg] pid %d\n", pid);
+        printf("[PID %d] running in background\n", pid);
         return EXEC_OK;
     }
 
     int status = 0;
     if (waitpid(pid, &status, 0) == -1) {
-        perror("waitpid");
+        perror("mysh: waitpid");
         return EXEC_ERROR;
+    }
+
+    if (WIFEXITED(status)) {
+        int code = WEXITSTATUS(status);
+        if (code != 0) {
+            fprintf(stderr, "mysh: process %d exited with status %d\n", pid, code);
+        }
+    } else if (WIFSIGNALED(status)) {
+        int sig = WTERMSIG(status);
+        fprintf(stderr, "mysh: process %d terminated by signal %d\n", pid, sig);
     }
 
     return EXEC_OK;

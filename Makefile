@@ -1,21 +1,36 @@
 #Compiler and Compiler flags 
 CC = gcc
+
 CFLAGS = -Wall -Wextra -std=c11 
 
 # Name of the output executable
 TARGET = mysh 
 
+# Objects list
+OBJS = main.o parser.o executor.o builtins.o
+
 # Builds the shell 
 all: $(TARGET)
 
 # Build rule for the shell executable 
-$(TARGET): main.c parser.c executor.c builtins.c
-	$(CC) $(CFLAGS) main.c parser.c executor.c builtins.c -o $(TARGET)
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
-# Removes generated files  
+main.o: main.c parser.h executor.h
+	$(CC) $(CFLAGS) -c main.c
+
+parser.o: parser.c parser.h
+	$(CC) $(CFLAGS) -c parser.c
+
+executor.o: executor.c executor.h parser.h
+	$(CC) $(CFLAGS) -c executor.c
+
+builtins.o: builtins.c builtins.h
+	$(CC) $(CFLAGS) -c builtins.c
+
+# Removes generated files
 clean:
-	rm -f $(TARGET)
-
+	rm -f $(TARGET) *.o
 
 # To compile and run the shell, type "make" in the terminal,
 # then execute "./mysh" to start the shell.

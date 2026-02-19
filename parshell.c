@@ -1,16 +1,10 @@
-/*
-This is a partial shell implementation. 
-It does not have a modular design, Proper header file, Command struct, etc .
-This only serves as a starting point for us to test our current 
-understanding of the concepts tackled in class and learned with youtube tutorials. 
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
 
 int main(void){
 	size_t bufsize = 0; 
@@ -107,11 +101,31 @@ int main(void){
 		}
 
 		if (pid == 0) {
-			int val = execvp(argv[0], argv); 
-			if (val == -1) perror("execvp failed");
-			exit(EXIT_FAILURE);
+			// Child: replace image with external command
+			execvp(argv[0], argv);
+			// If execvp returns, it failed
+			if (errno == ENOENT) {
+				fprintf(stderr, "mysh: command not found: %s\n", argv[0]);
+			} else {
+				fprintf(stderr, "mysh: exec error: %s: ", argv[0]);
+				perror("");
+			}
+			exit(127);
 		} else {
-			wait(NULL);
+			int status;
+			if (waitpid(pid, &status, 0) == -1) {
+				perror("mysh: waitpid");
+			} else {
+				if (WIFEXITED(status)) {
+					int code = WEXITSTATUS(status);
+					if (code != 0) {
+						fprintf(stderr, "mysh: process %d exited with status %d\n", pid, code);
+					}
+				} else if (WIFSIGNALED(status)) {
+					int sig = WTERMSIG(status);
+					fprintf(stderr, "mysh: process %d terminated by signal %d\n", pid, sig);
+				}
+			}
 			free(argv);
 			//printf("Done with execvp \n");
 		}

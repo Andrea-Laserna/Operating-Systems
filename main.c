@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+
 #include "main.h"
 #include "parser.h"
 #include "executor.h"
@@ -34,7 +38,13 @@ int main(void) {
             }
             continue;
         }
-
+        
+        // Handle empty input
+        if (cmd.command == NULL) {
+            free_command(&cmd);
+            continue;
+        }
+        
         ExecStatus exec_status = execute_command(&cmd);
         free_command(&cmd);
 

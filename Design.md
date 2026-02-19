@@ -85,7 +85,13 @@ Progress:
     2. Currently executes simple external commands (ls, ls -l)
     3. 
 
+	We fork to run external programs without replacing the shell.
 
+	- execvp replaces the current process; doing it in the shell would kill the shell. fork creates a child, then the child execs the program while the parent shell stays alive.
+	- Isolation: the child can change stdin/stdout via dup2, set signals, and environment without affecting the parent.
+	- Control: the parent can wait (foreground) or not (background), report status, and keep the prompt responsive.
+	- Concurrency: multiple children let pipelines work (each stage in its own process).
+	- Robustness: crashes in the child don’t crash the shell.
 ============================================
 
 ## To Dos:

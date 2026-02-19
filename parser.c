@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 
 // Basic tokenizer that fills Command fields (args, redirection, background).
 // No quoting/escaping support yet.
@@ -17,14 +16,14 @@ static void init_command(Command *cmd) {
     cmd->output_file = NULL;
     cmd->append = false;
     cmd->background = false;
-    for (size_t i = 0; i < 256; i++) {
+
+    for (int i = 0; i < MAX_ARGS; i++)
         cmd->args[i] = NULL;
-    }
 }
 
 static int add_arg(Command *cmd, const char *token, size_t *arg_count) {
     // Append a duplicated token into args, enforcing a fixed max
-    if (*arg_count >= 255) {
+    if (*arg_count >= MAX_ARGS - 1) {
         fprintf(stderr, "Too many arguments (max 255)\n");
         return -1;
     }
@@ -37,6 +36,11 @@ static int add_arg(Command *cmd, const char *token, size_t *arg_count) {
     cmd->args[*arg_count] = NULL;
     return 0;
 }
+
+// Returns:
+//  0  success (cmd populated)
+//  1  empty/whitespace-only input
+// -1  parse error
 
 int parse_command(const char *line, Command *cmd) {
     if (line == NULL || cmd == NULL) return -1;
@@ -80,8 +84,10 @@ int parse_command(const char *line, Command *cmd) {
         }
 
         if (strcmp(token, ">") == 0 || strcmp(token, ">>") == 0) {
-            cmd->append = (token[1] == '>');
+            cmd->append = (strcmp(token, ">>") == 0);
+          
             token = strtok_r(NULL, " \t\r\n", &saveptr);
+          
             if (token == NULL) {
                 fprintf(stderr, "Missing output file after '>'\n");
                 free(buffer);
@@ -90,7 +96,7 @@ int parse_command(const char *line, Command *cmd) {
             }
             cmd->output_file = strdup(token);
             if (cmd->output_file == NULL) {
-                perror("strdup");
+                perror("mysh: strdup");
                 free(buffer);
                 free_command(cmd);
                 return -1;
@@ -129,7 +135,7 @@ int parse_command(const char *line, Command *cmd) {
 void free_command(Command *cmd) {
     if (cmd == NULL) return;
     free(cmd->command);
-    for (size_t i = 0; i < 256; i++) {
+    for (size_t i = 0; i < MAX_ARGS; i++) {
         free(cmd->args[i]);
         cmd->args[i] = NULL;
     }
@@ -137,9 +143,13 @@ void free_command(Command *cmd) {
     free(cmd->output_file);
     cmd->input_file = NULL;
     cmd->output_file = NULL;
+  
+    cmd->append = false;
+    cmd->background = false;
 }
 
 
 /*
 help: ampangit ng code neto paulit2 pero ewan ko ba gumagana naman
 */
+
