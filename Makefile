@@ -1,7 +1,7 @@
 #Compiler and Compiler flags 
 CC = gcc
 
-CFLAGS = -Wall -Wextra -std=c11 
+CFLAGS = -Wall -Wextra -std=gnu11 -g
 
 # Name of the output executable
 TARGET = mysh 

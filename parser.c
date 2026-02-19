@@ -9,7 +9,7 @@
 // Basic tokenizer that fills Command fields (args, redirection, background).
 // No quoting/escaping support yet.
 
-static void init_command(Command *cmd) {
+void init_command(Command *cmd) {
     // Reset all fields and clear argument slots
     cmd->command = NULL;
     cmd->input_file = NULL;
