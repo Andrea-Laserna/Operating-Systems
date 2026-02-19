@@ -2,7 +2,6 @@
 #define PARSER_H
 
 #include <stdbool.h>
-
 #define MAX_ARGS 256
 
 typedef struct {
@@ -15,6 +14,11 @@ typedef struct {
 } Command;
 
 void init_command(Command *cmd);
-int parse_command(char *line, Command *cmd);
+
+// Parse a line into Command. Returns 0 on success, 1 on empty/whitespace, -1 on parse error.
+int parse_command(const char *line, Command *cmd);
+
+// Free any heap allocations inside Command.
+void free_command(Command *cmd);
 
 #endif

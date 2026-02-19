@@ -1,6 +1,7 @@
 // Headers and declarations
 #ifndef CELL_H
 # define CELL_H
+# define _POSIX_C_SOURCE 200809L
 
 # include <stdio.h>
 # include <stdlib.h>
@@ -8,6 +9,7 @@
 # include <string.h>
 # include <sys/types.h>
 # include <sys/wait.h>
+#include <errno.h>
 
 /*
 ANSI Color codes for output formatting:
