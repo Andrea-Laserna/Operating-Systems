@@ -10,7 +10,14 @@
 
 static void reap_background(void) {
     // Non-blocking reap to prevent zombies from background jobs
-    while (waitpid(-1, NULL, WNOHANG) > 0) {
+    int status;
+    pid_t pid;
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        if (WIFEXITED(status)) {
+            printf("[PID %d] exited with status %d\n", pid, WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            printf("[PID %d] terminated by signal %d\n", pid, WTERMSIG(status));
+        }
     }
 }
 
