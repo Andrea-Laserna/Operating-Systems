@@ -2,7 +2,7 @@
 #define PARSER_H
 
 #include <stdbool.h>
-#define MAX_ARGS 256
+#define MAX_ARGS 255
 
 typedef struct {
 	char *command;            // argv[0]
@@ -13,12 +13,20 @@ typedef struct {
 	int background;           // 1 if '&' is the last token
 } Command;
 
+typedef enum {
+	PARSE_OK = 0,
+	PARSE_EMPTY = 1,
+	PARSE_ERROR = -1
+} ParseStatus;
+
 void init_command(Command *cmd);
 
-// Parse a line into Command. Returns 0 on success, 1 on empty/whitespace, -1 on parse error.
-int parse_command(const char *line, Command *cmd);
+// Parse a line into a heap-allocated Command. Caller must free_command() the result.
+// Returns Command* on success (status PARSE_OK), NULL on empty input (status PARSE_EMPTY)
+// or parse failure (status PARSE_ERROR).
+Command *parse_command(const char *line, ParseStatus *status);
 
-// Free any heap allocations inside Command.
+// Free Command and any heap allocations inside it (expects a parse_command() result).
 void free_command(Command *cmd);
 
 #endif

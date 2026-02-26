@@ -37,23 +37,18 @@ int main(void) {
             break;
         }
 
-        Command cmd;
-        int parse_status = parse_command(line, &cmd);
-        if (parse_status != 0) {
-            if (parse_status < 0) {
-                fprintf(stderr, "Failed to parse command\n");
-            }
+        ParseStatus parse_status = PARSE_ERROR;
+        Command *cmd = parse_command(line, &parse_status);
+        if (parse_status == PARSE_EMPTY) {
+            continue;
+        }
+        if (cmd == NULL) {
+            fprintf(stderr, "Failed to parse command\n");
             continue;
         }
         
-        // Handle empty input
-        if (cmd.command == NULL) {
-            free_command(&cmd);
-            continue;
-        }
-        
-        ExecStatus exec_status = execute_command(&cmd);
-        free_command(&cmd);
+        ExecStatus exec_status = execute_command(cmd);
+        free_command(cmd);
 
         if (exec_status == EXEC_EXIT) {
             break;
