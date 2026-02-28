@@ -62,9 +62,21 @@ Command *parse_command(const char *line, ParseStatus *status) {
 
     while (token != NULL) {
         if (strcmp(token, "&") == 0) {
+            if (cmd->background) {
+                fprintf(stderr, "Multiple '&' tokens not allowed\n");
+                free(buffer);
+                free_command(cmd);
+                return NULL;
+            }
             cmd->background = true;
             token = strtok_r(NULL, " \t\r\n", &saveptr);
-            continue;
+            if (token != NULL) {
+                fprintf(stderr, "'&' must be the last token\n");
+                free(buffer);
+                free_command(cmd);
+                return NULL;
+            }
+            break; // '&' properly at end
         }
 
         if (strcmp(token, "<") == 0) {
