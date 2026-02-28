@@ -1,5 +1,6 @@
 #include "executor.h"
 #include "builtins.h"
+#include "jobs.h"
 
 #include <errno.h>
 #include <fcntl.h>
