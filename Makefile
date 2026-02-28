@@ -32,6 +32,10 @@ builtins.o: builtins.c builtins.h
 clean:
 	rm -f $(TARGET) *.o
 
+# Removes all .txt files in the directory
+clean-txt:
+	rm -f *.txt
+
 # To compile and run the shell, type "make" in the terminal,
 # then execute "./mysh" to start the shell.
 # To clean up the directory, type "make clean".
