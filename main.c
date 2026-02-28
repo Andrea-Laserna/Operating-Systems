@@ -5,6 +5,7 @@
 #include "main.h"
 #include "parser.h"
 #include "executor.h"
+#include "jobs.h"
 
 // REPL loop: parse input into Command and dispatch executor
 
