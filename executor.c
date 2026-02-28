@@ -1,6 +1,5 @@
 #include "executor.h"
 #include "builtins.h"
-#include "jobs.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -65,9 +64,9 @@ ExecStatus execute_command(const Command *cmd) {
         if (setup_redirection(cmd) != 0) {
             _exit(EXIT_FAILURE);
         }
-
+      
         execvp(cmd->command, cmd->args);
-
+      
         // execvp only returns on failure
         if (errno == ENOENT) {
             fprintf(stderr, "mysh: command not found: %s\n", cmd->command);
@@ -78,13 +77,7 @@ ExecStatus execute_command(const Command *cmd) {
     }
 
     if (cmd->background) {
-        int jid = jobs_add(pid);
-        if (jid < 0) {
-            // fallback if job table is full
-            printf("[PID %d] running in background\n", pid);
-        } else {
-            printf("[%d] %d\n", jid, pid);   // typical shell format
-        }
+        printf("[PID %d] running in background\n", pid);
         return EXEC_OK;
     }
 
