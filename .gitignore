@@ -3,4 +3,7 @@
 # Windows executables
 *.exe     
 # Common gcc output
-*.out     
+*.out 
+# Ignore text files (e.g., output from tests)
+*.txt 
+   
