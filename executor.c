@@ -77,7 +77,12 @@ ExecStatus execute_command(const Command *cmd) {
     }
 
     if (cmd->background) {
-        printf("[PID %d] running in background\n", pid);
+        int jid = jobs_add(pid);
+        if (jid < 0) {
+            printf("[PID %d] running in background\n", pid);
+        } else {
+            printf("[%d] %d\n", jid, pid);
+        }
         return EXEC_OK;
     }
 
