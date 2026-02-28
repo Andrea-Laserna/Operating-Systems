@@ -8,25 +8,26 @@
 
 // REPL loop: parse input into Command and dispatch executor
 
-static void reap_background(void) {
-    // Non-blocking reap to prevent zombies from background jobs
-    int status;
-    pid_t pid;
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        if (WIFEXITED(status)) {
-            printf("[PID %d] exited with status %d\n", pid, WEXITSTATUS(status));
-        } else if (WIFSIGNALED(status)) {
-            printf("[PID %d] terminated by signal %d\n", pid, WTERMSIG(status));
-        }
-    }
-}
+// static void reap_background(void) {
+//     // Non-blocking reap to prevent zombies from background jobs
+//     int status;
+//     pid_t pid;
+//     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+//         if (WIFEXITED(status)) {
+//             printf("[PID %d] exited with status %d\n", pid, WEXITSTATUS(status));
+//         } else if (WIFSIGNALED(status)) {
+//             printf("[PID %d] terminated by signal %d\n", pid, WTERMSIG(status));
+//         }
+//     }
+// }
 
 int main(void) {
     char *line = NULL;
     size_t bufsize = 0;
 
     while (1) {
-        reap_background();
+        // Reap any background children that finished since the last loop
+        jobs_reap_finished();
 
         printf("mysh> ");
         // fflush(stdout);

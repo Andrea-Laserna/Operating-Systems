@@ -7,7 +7,7 @@ CFLAGS = -Wall -Wextra -std=gnu11 -g
 TARGET = mysh 
 
 # Objects list
-OBJS = main.o parser.o executor.o builtins.o
+OBJS = main.o parser.o executor.o builtins.o jobs.o
 
 # Builds the shell 
 all: $(TARGET)
@@ -16,7 +16,7 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
-main.o: main.c parser.h executor.h
+main.o: main.c parser.h executor.h jobs.h
 	$(CC) $(CFLAGS) -c main.c
 
 parser.o: parser.c parser.h
@@ -24,6 +24,9 @@ parser.o: parser.c parser.h
 
 executor.o: executor.c executor.h parser.h
 	$(CC) $(CFLAGS) -c executor.c
+
+jobs.o: jobs.c jobs.h
+	$(CC) $(CFLAGS) -c jobs.c
 
 builtins.o: builtins.c builtins.h
 	$(CC) $(CFLAGS) -c builtins.c
